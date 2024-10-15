@@ -86,7 +86,7 @@ def main(args):
         args.dataset,
         args.config,
         split=args.split,
-        use_auth_token=True,
+        token=True,
     )
 
     text_column_name = get_text_column_names(dataset.column_names)
