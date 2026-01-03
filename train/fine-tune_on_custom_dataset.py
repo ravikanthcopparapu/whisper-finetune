@@ -128,7 +128,7 @@ print('ARGUMENTS OF INTEREST:')
 print(vars(args))
 print('\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n')
 
-gradient_checkpointing = True
+gradient_checkpointing = False
 freeze_feature_encoder = False
 freeze_encoder = False
 
@@ -159,8 +159,6 @@ if freeze_encoder:
 model.config.forced_decoder_ids = None
 model.config.suppress_tokens = []
 
-if gradient_checkpointing:
-    model.config.use_cache = False
 
 
 ############################        DATASET LOADING AND PREP        ##########################
@@ -200,7 +198,7 @@ def prepare_dataset(batch):
 
 max_label_length = model.config.max_length
 min_input_length = 0.0
-max_input_length = 30.0
+max_input_length = 20.0
 def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
@@ -278,12 +276,12 @@ if args.train_strategy == 'epoch':
     training_args = Seq2SeqTrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.train_batchsize,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=8,
         learning_rate=args.learning_rate,
         warmup_steps=args.warmup,
-        gradient_checkpointing=gradient_checkpointing,
+        gradient_checkpointing=False,
         fp16=True,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         num_train_epochs=args.num_epochs,
         save_total_limit=10,
@@ -295,7 +293,7 @@ if args.train_strategy == 'epoch':
         load_best_model_at_end=True,
         metric_for_best_model="wer",
         greater_is_better=False,
-        optim="adamw_bnb_8bit",
+        optim="adamw_torch",
         resume_from_checkpoint=args.resume_from_ckpt,
     )
 
@@ -303,12 +301,12 @@ elif args.train_strategy == 'steps':
     training_args = Seq2SeqTrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.train_batchsize,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=8,
         learning_rate=args.learning_rate,
         warmup_steps=args.warmup,
-        gradient_checkpointing=gradient_checkpointing,
+        gradient_checkpointing=False,
         fp16=True,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         eval_steps=1000,
         save_strategy="steps",
         save_steps=1000,
@@ -322,7 +320,7 @@ elif args.train_strategy == 'steps':
         load_best_model_at_end=True,
         metric_for_best_model="wer",
         greater_is_better=False,
-        optim="adamw_bnb_8bit",
+        optim="adamw_torch",
         resume_from_checkpoint=args.resume_from_ckpt,
     )
 
