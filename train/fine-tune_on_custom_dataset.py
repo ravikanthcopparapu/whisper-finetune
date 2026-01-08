@@ -337,6 +337,6 @@ trainer = Seq2SeqTrainer(
 processor.save_pretrained(training_args.output_dir)
 
 print('TRAINING IN PROGRESS...')
-//trainer.train()
+#trainer.train()
 trainer.train(resume_from_checkpoint=args.resume_from_ckpt)
 print('DONE TRAINING')
