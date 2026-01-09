@@ -64,7 +64,7 @@ model = WhisperForConditionalGeneration.from_pretrained(args.model_name)
 if model.config.decoder_start_token_id is None:
     raise ValueError("decoder_start_token_id is not defined")
 
-# Enable gradient checkpointing for low memory (Colab)
+# Enable gradient checkpointing (important for Colab Free GPU memory)
 if gradient_checkpointing:
     model.gradient_checkpointing_enable()
 
@@ -182,53 +182,30 @@ def compute_metrics(pred):
 
 ###############################     TRAINING ARGS     ########################
 
-if args.train_strategy == 'epoch':
-    training_args = Seq2SeqTrainingArguments(
-        output_dir=args.output_dir,
-        per_device_train_batch_size=args.train_batchsize,
-        gradient_accumulation_steps=4,
-        learning_rate=args.learning_rate,
-        warmup_steps=args.warmup,
-        fp16=True,
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
-        num_train_epochs=args.num_epochs,
-        save_total_limit=10,
-        per_device_eval_batch_size=args.eval_batchsize,
-        predict_with_generate=True,
-        generation_max_length=225,
-        logging_steps=500,
-        report_to=["tensorboard"],
-        load_best_model_at_end=True,
-        metric_for_best_model="wer",
-        greater_is_better=False,
-        optim="adamw_torch",
-    )
-
-elif args.train_strategy == 'steps':
-    training_args = Seq2SeqTrainingArguments(
-        output_dir=args.output_dir,
-        per_device_train_batch_size=args.train_batchsize,
-        gradient_accumulation_steps=4,
-        learning_rate=args.learning_rate,
-        warmup_steps=args.warmup,
-        fp16=True,
-        evaluation_strategy="steps",
-        eval_steps=1000,
-        save_strategy="steps",
-        save_steps=1000,
-        max_steps=args.num_steps,
-        save_total_limit=10,
-        per_device_eval_batch_size=args.eval_batchsize,
-        predict_with_generate=True,
-        generation_max_length=225,
-        logging_steps=500,
-        report_to=["tensorboard"],
-        load_best_model_at_end=True,
-        metric_for_best_model="wer",
-        greater_is_better=False,
-        optim="adamw_torch",
-    )
+# Use STEP-BASED saving so checkpoints are always created
+training_args = Seq2SeqTrainingArguments(
+    output_dir=args.output_dir,
+    per_device_train_batch_size=args.train_batchsize,
+    gradient_accumulation_steps=4,
+    learning_rate=args.learning_rate,
+    warmup_steps=args.warmup,
+    fp16=True,
+    evaluation_strategy="steps",
+    eval_steps=1000,
+    save_strategy="steps",
+    save_steps=1000,
+    num_train_epochs=args.num_epochs,
+    save_total_limit=10,
+    per_device_eval_batch_size=args.eval_batchsize,
+    predict_with_generate=True,
+    generation_max_length=225,
+    logging_steps=500,
+    report_to=["tensorboard"],
+    load_best_model_at_end=True,
+    metric_for_best_model="wer",
+    greater_is_better=False,
+    optim="adamw_torch",
+)
 
 ###############################     TRAINER     ########################
 
@@ -247,5 +224,5 @@ processor.save_pretrained(training_args.output_dir)
 ###############################     TRAIN     ########################
 
 print('TRAINING IN PROGRESS...')
-trainer.train()
+trainer.train(resume_from_checkpoint=args.resume_from_ckpt)
 print('DONE TRAINING')
