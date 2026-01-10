@@ -45,7 +45,6 @@ print('--------------------------------------------')
 
 #############################       CONFIG FLAGS       #####################################
 
-gradient_checkpointing = True
 freeze_feature_encoder = False
 freeze_encoder = False
 
@@ -64,9 +63,11 @@ model = WhisperForConditionalGeneration.from_pretrained(args.model_name)
 if model.config.decoder_start_token_id is None:
     raise ValueError("decoder_start_token_id is not defined")
 
-# Enable gradient checkpointing (important for Colab Free GPU memory)
-if gradient_checkpointing:
-    model.gradient_checkpointing_enable()
+# IMPORTANT: disable cache for training stability
+model.config.use_cache = False
+
+# DO NOT enable gradient checkpointing (causes backward() error on Colab with fp16)
+# model.gradient_checkpointing_enable()
 
 if freeze_feature_encoder:
     model.freeze_feature_encoder()
@@ -182,7 +183,7 @@ def compute_metrics(pred):
 
 ###############################     TRAINING ARGS     ########################
 
-# Use STEP-BASED saving so checkpoints are always created
+# Step-based saving so checkpoints are ALWAYS created (important for Colab)
 training_args = Seq2SeqTrainingArguments(
     output_dir=args.output_dir,
     per_device_train_batch_size=args.train_batchsize,
@@ -190,7 +191,7 @@ training_args = Seq2SeqTrainingArguments(
     learning_rate=args.learning_rate,
     warmup_steps=args.warmup,
     fp16=True,
-    evaluation_strategy="steps",
+    eval_strategy="steps",     # older Transformers compatible
     eval_steps=1000,
     save_strategy="steps",
     save_steps=1000,
