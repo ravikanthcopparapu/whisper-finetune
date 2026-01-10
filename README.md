@@ -436,5 +436,18 @@ Since the release of Whisper models and code from OpenAI, there have been severa
     - [stable-ts](https://github.com/jianfch/stable-ts)
 - Forced Alignment using an external Phoneme based ASR model
     - [whisperX](https://github.com/m-bain/whisperX)
+ 
+## Command to test the model Whisper updated by Ravi
+!python /content/whisper-finetune/transcribe_audio.py \
+--model_dir "/content/whisper-finetune/final_whisper_model" \
+--path_to_audio /content/Hindi_test_subset/Hindi_test_subset/test/audio/0153_003.wav \
+--language hi \
+--device 0
+
+!python /content/whisper-finetune/transcribe_audio.py \
+--model_dir vasista22/whisper-hindi-small \
+--path_to_audio /content/Hindi_test_subset/Hindi_test_subset/test/audio/0128_003.wav \
+--language hi \
+--device 0
 - Parameter Efficient Fine-tuning
     - [fast-whisper-finetuning](https://github.com/Vaibhavs10/fast-whisper-finetuning)
